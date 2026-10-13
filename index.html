@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FaSt Verdienstrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6FA; --surface:#FFFFFF; --ink:#16233A; --muted:#5A6780; --line:#D9E0EA;
+  --navy:#13294B; --navy-2:#1D3A66; --gold:#C9A227; --gold-soft:#F4EAC8; --on-navy:#FFFFFF; --on-navy-muted:#B8C4D8;
+  --off:#EEF1F5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1726; --surface:#16233A; --ink:#EAF0F8; --muted:#9FB0C8; --line:#2A3B57;
+    --navy:#0A1628; --navy-2:#1D3A66; --gold:#D8B443; --gold-soft:#3A3217; --off:#1E2D47;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1726; --surface:#16233A; --ink:#EAF0F8; --muted:#9FB0C8; --line:#2A3B57;
+  --navy:#0A1628; --navy-2:#1D3A66; --gold:#D8B443; --gold-soft:#3A3217; --off:#1E2D47;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.4}
+h1,h2,.num{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+.wrap{max-width:1360px;margin:0 auto;padding:18px 24px 20px}
+header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.logo{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:30px;letter-spacing:-.5px;color:var(--navy);cursor:default;user-select:none;background:none;border:0;padding:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo{color:var(--ink)}}
+.logo span{color:var(--gold)}
+header h1{font-size:22px;font-weight:600;margin:0;color:var(--muted)}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;font-size:15px;cursor:pointer}
+.ghost:hover{border-color:var(--gold)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.inputs{display:flex;flex-direction:column;gap:14px}
+.block h2{font-size:17px;font-weight:700;margin:0 0 10px;display:flex;align-items:baseline;gap:10px}
+.block h2 small{font-family:Figtree,sans-serif;font-weight:500;font-size:15px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 16px;font-weight:700;font-size:17px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.chip .box{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:var(--gold-soft)}
+.chip[aria-pressed="true"] .box{background:var(--gold);border-color:var(--gold);color:#fff}
+.chip[aria-pressed="true"] .box::after{content:"✓"}
+
+.field label{display:flex;justify-content:space-between;font-weight:600;font-size:15px;color:var(--muted);margin-bottom:4px}
+.field label b{color:var(--ink);font-size:18px;font-family:"Bricolage Grotesque",sans-serif}
+input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;cursor:pointer}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;background:var(--surface);padding:8px 0;font-weight:700;font-size:17px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+
+.place-labels{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:2px}
+.place-labels b{color:var(--ink)}
+
+.mix{display:flex;flex-direction:column;gap:6px}
+.trow{display:grid;grid-template-columns:118px minmax(0,1fr) 58px 52px;align-items:center;gap:12px;padding:4px 0}
+.tname{font-weight:700;font-size:16px;line-height:1.15}
+.tname small{display:block;font-weight:500;font-size:13px;color:var(--muted)}
+.tpct{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:18px;text-align:right}
+.dbl{border:2px solid var(--line);background:var(--surface);border-radius:9px;font-weight:700;font-size:14px;padding:5px 0;cursor:pointer}
+.dbl[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.trow.locked{opacity:.38}
+.trow.locked input,.trow.locked .dbl{pointer-events:none}
+.nodbl{font-size:12px;color:var(--muted);text-align:center}
+.mixhead{display:grid;grid-template-columns:118px minmax(0,1fr) 58px 52px;gap:12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.mixhead span:last-child{text-align:center}
+
+.result{background:var(--navy);color:var(--on-navy);border-radius:22px;padding:26px 28px;position:sticky;top:calc(12px + env(safe-area-inset-top,0px))}
+.result .lbl{color:var(--on-navy-muted);font-size:16px;font-weight:500}
+.big{font-size:clamp(56px,7vw,92px);font-weight:800;line-height:1;letter-spacing:-2px;color:var(--gold);margin:6px 0 4px}
+.big small{font-size:.38em;letter-spacing:0;color:var(--on-navy);font-weight:600;margin-left:6px}
+.split{margin:18px 0 6px;height:16px;border-radius:8px;background:var(--navy-2);overflow:hidden;display:flex}
+.split .f{background:#8FA6C9;transition:width .35s}
+.split .p{background:var(--gold);transition:width .35s}
+.legend{display:flex;justify-content:space-between;font-size:15px;color:var(--on-navy-muted)}
+.legend b{color:var(--on-navy);font-size:17px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:1px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.stat{background:var(--navy-2);border-radius:14px;padding:12px 14px}
+.stat .v{font-size:28px;font-weight:700;margin-top:2px}
+.stat.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.stat.wide .v{font-size:36px;color:var(--gold)}
+.note{font-size:13px;color:var(--on-navy-muted);margin-top:14px;line-height:1.45}
+
+dialog{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface);color:var(--ink);max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(10,20,40,.45)}
+dialog h2{margin:0 0 6px;font-size:20px}
+dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.opt input{margin-top:3px;accent-color:var(--gold)}
+
+@media (max-width:980px){
+  .grid{grid-template-columns:1fr}
+  .result{position:static}
+}
+@media (max-width:560px){
+  .wrap{padding:12px}
+  .row2{grid-template-columns:1fr}
+  header h1{display:none}
+  .trow,.mixhead{grid-template-columns:96px minmax(0,1fr) 48px 46px;gap:8px}
+}
+@media (prefers-reduced-motion:reduce){.split .f,.split .p{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="logo" id="logo" title="FaSt" aria-label="FaSt">Fa<span>St</span></button>
+    <h1>Dein Verdienst bei uns</h1>
+    <div class="hbtns">
+      <button class="ghost" id="reset">Zurücksetzen</button>
+      <button class="ghost" id="fs">Vollbild</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="panel inputs">
+      <section class="block row2">
+        <div class="field">
+          <label>Modell</label>
+          <div class="seg" id="model"><button data-m="local">Vor Ort</button><button data-m="remote">Ferntherapeut</button></div>
+        </div>
+        <div class="field" id="carWrap" hidden>
+          <label>Auto</label>
+          <div class="seg" id="car"><button data-c="own">Eigenes Auto</button><button data-c="fleet">Firmenwagen</button></div>
+        </div>
+      </section>
+
+      <section class="block field" id="kmWrap" hidden>
+        <label for="km">Fahrstrecke pro Arbeitstag <b id="kmV"></b></label>
+        <input type="range" id="km" min="0" max="300" step="10" value="60">
+        <div class="place-labels"><span>Kilometergeld · <b>0,30 € pro km</b>, zusätzlich zum Gehalt</span></div>
+      </section>
+
+      <section class="block">
+        <h2>Deine Zertifikate <small id="fixLabel">Fixum 20 €/h</small></h2>
+        <div class="chips" id="certs"></div>
+      </section>
+
+      <section class="block row2">
+        <div class="field">
+          <label for="hours">Stunden pro Woche <b id="hoursV">30</b></label>
+          <input type="range" id="hours" min="5" max="40" step="1" value="30">
+        </div>
+        <div class="field">
+          <label>Arbeitstage pro Woche <b id="daysV">5</b></label>
+          <div class="seg" id="days"></div>
+        </div>
+      </section>
+
+      <section class="block field">
+        <label for="hb">Wo du behandelst <b id="hbV"></b></label>
+        <input type="range" id="hb" min="0" max="100" step="5" value="30">
+        <div class="place-labels">
+          <span>Hausbesuch einzeln (HB) · <b>22,78 €</b></span>
+          <span>Einrichtung (HBHP) · <b>13,09 €</b></span>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Deine Behandlungen <small>Anteil deiner Arbeitszeit</small></h2>
+        <div class="mixhead"><span>Behandlung</span><span></span><span style="text-align:right">Anteil</span><span>Doppel</span></div>
+        <div class="mix" id="mix"></div>
+      </section>
+    </div>
+
+    <aside class="result" aria-live="polite">
+      <div class="lbl">Dein Stundenlohn im Schnitt</div>
+      <div class="big num" id="rate">0,00<small>€/h</small></div>
+      <div class="split" aria-hidden="true"><div class="f" id="barF"></div><div class="p" id="barP"></div></div>
+      <div class="legend">
+        <span><i style="background:#8FA6C9"></i>Fixum <b id="lgF"></b></span>
+        <span><i style="background:var(--gold)"></i>Provision <span id="lgPct">10</span> % <b id="lgP"></b></span>
+      </div>
+      <div class="stats">
+        <div class="stat wide"><div><div class="lbl">Monat brutto</div><div class="lbl" style="font-size:13px">Durchschnitt über das Jahr</div></div><div class="v num" id="month"></div></div>
+        <div class="stat"><div class="lbl">Jahr brutto</div><div class="v num" id="year"></div></div>
+        <div class="stat"><div class="lbl">Urlaubstage</div><div class="v num" id="vac"></div></div>
+        <div class="stat"><div class="lbl">Umsatz pro Woche</div><div class="v num" id="rev"></div></div>
+        <div class="stat"><div class="lbl">Termine pro Woche</div><div class="v num" id="visits"></div></div>
+        <div class="stat wide" id="kmStat" hidden><div><div class="lbl">Kilometergeld pro Monat</div><div class="lbl" style="font-size:13px">Auslagenersatz, nicht im Gehalt enthalten</div></div><div class="v num" id="kmM" style="font-size:28px"></div></div>
+      </div>
+      <div class="note" id="note"></div>
+    </aside>
+  </div>
+</div>
+
+<dialog id="settings">
+  <h2>Interne Einstellung</h2>
+  <p>Für Bewerber nicht sichtbar. Öffnen mit Taste „U“ oder dreimal aufs Logo tippen.</p>
+  <label class="opt"><input type="radio" name="vac" value="fix"><span><b>Urlaub nur mit Fixum</b><br><small>Provision nur in Arbeitswochen</small></span></label>
+  <label class="opt"><input type="radio" name="vac" value="avg"><span><b>Urlaub inkl. Ø-Provision</b><br><small>Provision über alle 52 Wochen</small></span></label>
+  <div style="text-align:right;margin-top:12px"><button class="ghost" id="closeSet">Fertig</button></div>
+</dialog>
+
+<script>
+(function(){
+  const HB = 22.78, HBHP = 13.09, BASE = 20, PROV = 0.10, PROV_OWN = 0.12, KM = 0.30;
+  const CERTS = [{id:"MLD",label:"MLD"},{id:"MT",label:"MT"},{id:"ZNS",label:"KG-ZNS"}];
+  const T = [
+    {id:"KG",    label:"KG",      price:29.63, min:20, cert:null,  dbl:true},
+    {id:"ZNS",   label:"KG-ZNS",  price:47.06, min:20, cert:"ZNS", dbl:true},
+    {id:"MT",    label:"MT",      price:35.59, min:20, cert:"MT",  dbl:true},
+    {id:"MLD30", label:"MLD 30",  price:35.97, min:20, cert:"MLD", dbl:true},
+    {id:"MLD45", label:"MLD 45",  price:53.94, min:40, cert:"MLD", dbl:false},
+    {id:"MLD60", label:"MLD 60",  price:71.94, min:60, cert:"MLD", dbl:false}
+  ];
+  const eur = (v,d=2)=>v.toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d});
+
+  let vacMode = "fix";
+  try{ const s = localStorage.getItem("fast-vac-mode"); if(s==="fix"||s==="avg") vacMode = s; }catch(e){}
+
+  let S;
+  function fresh(){
+    S = {certs:{MLD:false,MT:false,ZNS:false}, hours:30, days:5, hb:30, model:"local", car:"own", km:60,
+         share:{KG:100,ZNS:0,MT:0,MLD30:0,MLD45:0,MLD60:0}, dbl:{}};
+  }
+  fresh();
+
+  const enabled = t => !t.cert || S.certs[t.cert];
+
+  function setShare(id, v){
+    const en = T.filter(enabled).map(t=>t.id);
+    const others = en.filter(x=>x!==id);
+    if(!others.length){ S.share[id]=100; return; }
+    v = Math.max(0,Math.min(100,v));
+    S.share[id]=v;
+    const rest = 100 - v;
+    const sum = others.reduce((a,x)=>a+S.share[x],0);
+    others.forEach(x=>{ S.share[x] = sum>0 ? S.share[x]*rest/sum : rest/others.length; });
+  }
+  function normalize(){
+    T.forEach(t=>{ if(!enabled(t)){ S.share[t.id]=0; S.dbl[t.id]=false; } });
+    const en = T.filter(enabled).map(t=>t.id);
+    const sum = en.reduce((a,x)=>a+S.share[x],0);
+    if(sum<=0){ en.forEach(x=>S.share[x]=0); S.share.KG=100; }
+    else en.forEach(x=>S.share[x]=S.share[x]*100/sum);
+  }
+
+  // build certificate chips
+  const certsEl = document.getElementById("certs");
+  CERTS.forEach(c=>{
+    const b=document.createElement("button"); b.className="chip"; b.dataset.id=c.id;
+    b.innerHTML='<span class="box"></span>'+c.label;
+    b.onclick=()=>{ S.certs[c.id]=!S.certs[c.id]; normalize(); render(); };
+    certsEl.appendChild(b);
+  });
+
+  // days segmented
+  const daysEl=document.getElementById("days");
+  [1,2,3,4,5].forEach(d=>{
+    const b=document.createElement("button"); b.textContent=d; b.dataset.d=d;
+    b.onclick=()=>{S.days=d; render();};
+    daysEl.appendChild(b);
+  });
+
+  // treatment rows
+  const mixEl=document.getElementById("mix");
+  T.forEach(t=>{
+    const r=document.createElement("div"); r.className="trow"; r.dataset.id=t.id;
+    r.innerHTML =
+      '<div class="tname">'+t.label+'<small class="meta"></small></div>'+
+      '<input type="range" min="0" max="100" step="1" aria-label="Anteil '+t.label+'">'+
+      '<div class="tpct"></div>'+
+      (t.dbl ? '<button class="dbl" aria-label="Doppeltermin '+t.label+'">2×</button>' : '<div class="nodbl">–</div>');
+    r.querySelector("input").addEventListener("input",e=>{ setShare(t.id, +e.target.value); render(); });
+    const db=r.querySelector(".dbl");
+    if(db) db.onclick=()=>{ S.dbl[t.id]=!S.dbl[t.id]; render(); };
+    mixEl.appendChild(r);
+  });
+
+  document.getElementById("hours").addEventListener("input",e=>{S.hours=+e.target.value; render();});
+  document.getElementById("hb").addEventListener("input",e=>{S.hb=+e.target.value; render();});
+  const modelEl=document.getElementById("model"), carEl=document.getElementById("car");
+  modelEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.model=b.dataset.m; render();});
+  carEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.car=b.dataset.c; render();});
+  document.getElementById("km").addEventListener("input",e=>{S.km=+e.target.value; render();});
+  document.getElementById("reset").onclick=()=>{ fresh(); render(); };
+  document.getElementById("fs").onclick=()=>{
+    try{
+      if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }catch(e){}
+  };
+
+  // hidden settings
+  const dlg=document.getElementById("settings");
+  function openSettings(){
+    dlg.querySelectorAll('input[name=vac]').forEach(i=>i.checked=(i.value===vacMode));
+    if(dlg.showModal) dlg.showModal();
+  }
+  dlg.querySelectorAll('input[name=vac]').forEach(i=>i.addEventListener("change",()=>{
+    vacMode=i.value; try{localStorage.setItem("fast-vac-mode",vacMode);}catch(e){} render();
+  }));
+  document.getElementById("closeSet").onclick=()=>dlg.close();
+  document.addEventListener("keydown",e=>{
+    if((e.key==="u"||e.key==="U") && !e.ctrlKey && !e.metaKey && !e.altKey && !dlg.open) openSettings();
+  });
+  let taps=0, tapT;
+  document.getElementById("logo").onclick=()=>{
+    taps++; clearTimeout(tapT); tapT=setTimeout(()=>taps=0,700);
+    if(taps>=3){ taps=0; openSettings(); }
+  };
+
+  function calc(){
+    const fix = BASE + Object.values(S.certs).filter(Boolean).length;
+    const h = S.hb/100;
+    const pausch = h*HB + (1-h)*HBHP;
+    let revH=0, visitsH=0;
+    T.forEach(t=>{
+      const sh=S.share[t.id]/100; if(!sh) return;
+      const f = (t.dbl && S.dbl[t.id]) ? 2 : 1;
+      const perHour = 60/(t.min*f);
+      revH += sh*perHour*(t.price*f + pausch);
+      visitsH += sh*perHour;
+    });
+    const own = S.model==="remote" && S.car==="own";
+    const prov = own ? PROV_OWN : PROV;
+    const provH = revH*prov;
+    const vacDays = Math.round(30*S.days/5);
+    const vacWeeks = vacDays/S.days;
+    const workWeeks = 52 - vacWeeks;
+    const kmYear = own ? S.km*S.days*workWeeks*KM : 0;
+    const yFix = fix*S.hours*52;
+    const yProv = provH*S.hours*(vacMode==="avg"?52:workWeeks);
+    const year = yFix+yProv;
+    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,yFix,yProv,prov,own,kmMonth:kmYear/12};
+  }
+
+  function render(){
+    const R=calc();
+    document.getElementById("fixLabel").textContent="Fixum "+R.fix+" €/h";
+    certsEl.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",S.certs[b.dataset.id]));
+    document.getElementById("hours").value=S.hours;
+    document.getElementById("hoursV").textContent=S.hours+" h";
+    document.getElementById("daysV").textContent=S.days;
+    daysEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.d===S.days));
+    document.getElementById("hb").value=S.hb;
+    document.getElementById("hbV").textContent=S.hb+" % HB · "+(100-S.hb)+" % HBHP";
+
+    mixEl.querySelectorAll(".trow").forEach(r=>{
+      const t=T.find(x=>x.id===r.dataset.id), en=enabled(t), d=t.dbl&&S.dbl[t.id];
+      r.classList.toggle("locked",!en);
+      r.querySelector(".meta").textContent = en
+        ? eur(t.price*(d?2:1))+" € · "+(t.min*(d?2:1))+" Min"
+        : "Zertifikat nötig";
+      const inp=r.querySelector("input"); inp.value=Math.round(S.share[t.id]); inp.disabled=!en;
+      r.querySelector(".tpct").textContent=Math.round(S.share[t.id])+" %";
+      const db=r.querySelector(".dbl"); if(db){ db.setAttribute("aria-pressed",!!d); db.disabled=!en; }
+    });
+
+    modelEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===S.model));
+    carEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===S.car));
+    document.getElementById("carWrap").hidden = S.model!=="remote";
+    document.getElementById("kmWrap").hidden = !R.own;
+    document.getElementById("kmStat").hidden = !R.own;
+    document.getElementById("km").value=S.km;
+    document.getElementById("kmV").textContent=S.km+" km";
+    document.getElementById("kmM").textContent=eur(R.kmMonth,0)+" €";
+    document.getElementById("lgPct").textContent=Math.round(R.prov*100);
+    document.getElementById("rate").innerHTML=eur(R.rate)+"<small>€/h</small>";
+    const pf = R.fix/R.rate*100;
+    document.getElementById("barF").style.width=pf+"%";
+    document.getElementById("barP").style.width=(100-pf)+"%";
+    document.getElementById("lgF").textContent=eur(R.fix)+" €";
+    document.getElementById("lgP").textContent=eur(R.provH)+" €";
+    document.getElementById("month").textContent=eur(R.month,0)+" €";
+    document.getElementById("year").textContent=eur(R.year,0)+" €";
+    document.getElementById("vac").textContent=R.vacDays;
+    document.getElementById("rev").textContent=eur(R.revW,0)+" €";
+    document.getElementById("visits").textContent=eur(R.visitsW,0);
+    document.getElementById("note").textContent =
+      "Provision: "+Math.round(R.prov*100)+" % auf den vollen Rezeptwert inkl. Hausbesuchspauschale (einmal pro Patient und Tag). "+
+      (R.own ? "Kilometergeld (0,30 €/km) kommt zusätzlich und ist Auslagenersatz, kein Gehalt. " : "")+
+      "Berechnet im offiziellen Zeittakt, Feiertage und Krankheit nicht eingerechnet. Alle Beträge brutto.";
+  }
+  render();
+})();
+</script>
+</body>
+</html>
