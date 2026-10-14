@@ -27,6 +27,7 @@
 }
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
+.kminfo{background:var(--gold-soft);border-radius:12px;padding:10px 14px;font-size:16px;color:var(--ink)}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.4}
 h1,h2,.num{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif}
@@ -98,12 +99,6 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
 .stat.wide .v{font-size:36px;color:var(--gold)}
 .note{font-size:13px;color:var(--on-navy-muted);margin-top:14px;line-height:1.45}
 
-dialog{border:1px solid var(--line);border-radius:16px;padding:22px;background:var(--surface);color:var(--ink);max-width:420px;width:calc(100% - 32px)}
-dialog::backdrop{background:rgba(10,20,40,.45)}
-dialog h2{margin:0 0 6px;font-size:20px}
-dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
-.opt input{margin-top:3px;accent-color:var(--gold)}
 
 @media (max-width:980px){
   .grid{grid-template-columns:1fr}
@@ -121,7 +116,7 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
 <body>
 <div class="wrap">
   <header>
-    <button class="logo" id="logo" title="FaSt" aria-label="FaSt">Fa<span>St</span></button>
+    <div class="logo" id="logo" aria-label="FaSt">Fa<span>St</span></div>
     <h1>Dein Verdienst bei uns</h1>
     <div class="hbtns">
       <button class="ghost" id="reset">Zurücksetzen</button>
@@ -142,10 +137,8 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
         </div>
       </section>
 
-      <section class="block field" id="kmWrap" hidden>
-        <label for="km">Fahrstrecke pro Arbeitstag <b id="kmV"></b></label>
-        <input type="range" id="km" min="0" max="300" step="10" value="60">
-        <div class="place-labels"><span>Kilometergeld · <b>0,30 € pro km</b>, zusätzlich zum Gehalt</span></div>
+      <section class="block" id="kmWrap" hidden>
+        <div class="kminfo">Eigenes Auto: <b>Kilometergeld 0,30 € pro km</b>, zusätzlich zum Gehalt</div>
       </section>
 
       <section class="block">
@@ -194,24 +187,15 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
         <div class="stat"><div class="lbl">Urlaubstage</div><div class="v num" id="vac"></div></div>
         <div class="stat"><div class="lbl">Umsatz pro Woche</div><div class="v num" id="rev"></div></div>
         <div class="stat"><div class="lbl">Termine pro Woche</div><div class="v num" id="visits"></div></div>
-        <div class="stat wide" id="kmStat" hidden><div><div class="lbl">Kilometergeld pro Monat</div><div class="lbl" style="font-size:13px">Auslagenersatz, nicht im Gehalt enthalten</div></div><div class="v num" id="kmM" style="font-size:28px"></div></div>
       </div>
       <div class="note" id="note"></div>
     </aside>
   </div>
 </div>
 
-<dialog id="settings">
-  <h2>Interne Einstellung</h2>
-  <p>Für Bewerber nicht sichtbar. Öffnen mit Taste „U“ oder dreimal aufs Logo tippen.</p>
-  <label class="opt"><input type="radio" name="vac" value="fix"><span><b>Urlaub nur mit Fixum</b><br><small>Provision nur in Arbeitswochen</small></span></label>
-  <label class="opt"><input type="radio" name="vac" value="avg"><span><b>Urlaub inkl. Ø-Provision</b><br><small>Provision über alle 52 Wochen</small></span></label>
-  <div style="text-align:right;margin-top:12px"><button class="ghost" id="closeSet">Fertig</button></div>
-</dialog>
-
 <script>
 (function(){
-  const HB = 22.78, HBHP = 13.09, BASE = 20, PROV = 0.10, PROV_OWN = 0.12, KM = 0.30;
+  const HB = 22.78, HBHP = 13.09, BASE = 20, PROV = 0.10, PROV_OWN = 0.12;
   const CERTS = [{id:"MLD",label:"MLD"},{id:"MT",label:"MT"},{id:"ZNS",label:"KG-ZNS"}];
   const T = [
     {id:"KG",    label:"KG",      price:29.63, min:20, cert:null,  dbl:true},
@@ -223,12 +207,10 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
   ];
   const eur = (v,d=2)=>v.toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d});
 
-  let vacMode = "fix";
-  try{ const s = localStorage.getItem("fast-vac-mode"); if(s==="fix"||s==="avg") vacMode = s; }catch(e){}
 
   let S;
   function fresh(){
-    S = {certs:{MLD:false,MT:false,ZNS:false}, hours:30, days:5, hb:30, model:"local", car:"own", km:60,
+    S = {certs:{MLD:false,MT:false,ZNS:false}, hours:30, days:5, hb:30, model:"local", car:"own",
          share:{KG:100,ZNS:0,MT:0,MLD30:0,MLD45:0,MLD60:0}, dbl:{}};
   }
   fresh();
@@ -290,32 +272,12 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
   const modelEl=document.getElementById("model"), carEl=document.getElementById("car");
   modelEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.model=b.dataset.m; render();});
   carEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.car=b.dataset.c; render();});
-  document.getElementById("km").addEventListener("input",e=>{S.km=+e.target.value; render();});
   document.getElementById("reset").onclick=()=>{ fresh(); render(); };
   document.getElementById("fs").onclick=()=>{
     try{
       if(!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
     }catch(e){}
-  };
-
-  // hidden settings
-  const dlg=document.getElementById("settings");
-  function openSettings(){
-    dlg.querySelectorAll('input[name=vac]').forEach(i=>i.checked=(i.value===vacMode));
-    if(dlg.showModal) dlg.showModal();
-  }
-  dlg.querySelectorAll('input[name=vac]').forEach(i=>i.addEventListener("change",()=>{
-    vacMode=i.value; try{localStorage.setItem("fast-vac-mode",vacMode);}catch(e){} render();
-  }));
-  document.getElementById("closeSet").onclick=()=>dlg.close();
-  document.addEventListener("keydown",e=>{
-    if((e.key==="u"||e.key==="U") && !e.ctrlKey && !e.metaKey && !e.altKey && !dlg.open) openSettings();
-  });
-  let taps=0, tapT;
-  document.getElementById("logo").onclick=()=>{
-    taps++; clearTimeout(tapT); tapT=setTimeout(()=>taps=0,700);
-    if(taps>=3){ taps=0; openSettings(); }
   };
 
   function calc(){
@@ -336,11 +298,10 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
     const vacDays = Math.round(30*S.days/5);
     const vacWeeks = vacDays/S.days;
     const workWeeks = 52 - vacWeeks;
-    const kmYear = own ? S.km*S.days*workWeeks*KM : 0;
     const yFix = fix*S.hours*52;
-    const yProv = provH*S.hours*(vacMode==="avg"?52:workWeeks);
+    const yProv = provH*S.hours*52;
     const year = yFix+yProv;
-    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,yFix,yProv,prov,own,kmMonth:kmYear/12};
+    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,yFix,yProv,prov,own};
   }
 
   function render(){
@@ -369,10 +330,6 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
     carEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===S.car));
     document.getElementById("carWrap").hidden = S.model!=="remote";
     document.getElementById("kmWrap").hidden = !R.own;
-    document.getElementById("kmStat").hidden = !R.own;
-    document.getElementById("km").value=S.km;
-    document.getElementById("kmV").textContent=S.km+" km";
-    document.getElementById("kmM").textContent=eur(R.kmMonth,0)+" €";
     document.getElementById("lgPct").textContent=Math.round(R.prov*100);
     document.getElementById("rate").innerHTML=eur(R.rate)+"<small>€/h</small>";
     const pf = R.fix/R.rate*100;
@@ -387,8 +344,9 @@ dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
     document.getElementById("visits").textContent=eur(R.visitsW,0);
     document.getElementById("note").textContent =
       "Provision: "+Math.round(R.prov*100)+" % auf den vollen Rezeptwert inkl. Hausbesuchspauschale (einmal pro Patient und Tag). "+
-      (R.own ? "Kilometergeld (0,30 €/km) kommt zusätzlich und ist Auslagenersatz, kein Gehalt. " : "")+
-      "Berechnet im offiziellen Zeittakt, Feiertage und Krankheit nicht eingerechnet. Alle Beträge brutto.";
+      (R.own ? "Kilometergeld: 0,30 € pro km zusätzlich zum Gehalt. " : "")+
+      "Urlaub und Krankheit werden mit dem Durchschnittsverdienst bezahlt. "+
+      "Berechnet im offiziellen Zeittakt, Feiertage nicht gesondert eingerechnet. Alle Beträge brutto.";
   }
   render();
 })();
