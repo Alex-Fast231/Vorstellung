@@ -1,5 +1,5 @@
 // Offline-Cache für den Verdienstrechner. Bei Änderungen VERSION erhöhen.
-const VERSION = "fast-gehalt-v2";
+const VERSION = "fast-gehalt-v3";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

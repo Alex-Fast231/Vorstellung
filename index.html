@@ -162,7 +162,7 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
       </section>
 
       <section class="block" id="kmWrap" hidden>
-        <div class="kminfo">Eigenes Auto: <b>Kilometergeld 0,30 € pro km</b>, zusätzlich zum Gehalt</div>
+        <div class="kminfo" id="kmInfo"></div>
       </section>
 
       <section class="block" id="certWrap">
@@ -360,7 +360,8 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
     const provH = revH*prov;
     const vacDays = Math.round(30*S.days/5);
     const year = (fix+provH)*S.hours*52;
-    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,prov,own};
+    const km = !remote || own;   // Vor Ort (Physio + Ergo): immer km-Geld ab Praxis; Fern: nur mit eigenem Auto
+    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,prov,own,remote,km};
   }
 
   function render(){
@@ -395,7 +396,10 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
     modelEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===S.model));
     carEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===S.car));
     document.getElementById("carWrap").hidden = S.model!=="remote";
-    document.getElementById("kmWrap").hidden = !R.own;
+    document.getElementById("kmWrap").hidden = !R.km;
+    document.getElementById("kmInfo").innerHTML = R.remote
+      ? "Eigenes Auto: <b>Kilometergeld 0,30 € pro km</b>, zusätzlich zum Gehalt"
+      : "<b>Kilometergeld 0,30 € pro km</b> ab der Praxis, zusätzlich zum Gehalt";
     document.getElementById("lgPct").textContent=Math.round(R.prov*100);
     document.getElementById("rate").innerHTML=eur(R.rate)+"<small>€/h</small>";
     const pf = R.fix/R.rate*100;
@@ -410,7 +414,7 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
     document.getElementById("visits").textContent=eur(R.visitsW,0);
     document.getElementById("note").textContent =
       "Provision: "+Math.round(R.prov*100)+" % auf den vollen Rezeptwert inkl. Hausbesuchspauschale (einmal pro Patient und Tag). "+
-      (R.own ? "Kilometergeld: 0,30 € pro km zusätzlich zum Gehalt. " : "")+
+      (R.km ? "Kilometergeld: 0,30 € pro km"+(R.remote?"":" ab der Praxis")+" zusätzlich zum Gehalt. " : "")+
       "Urlaub und Krankheit werden mit dem Durchschnittsverdienst bezahlt. "+
       "Berechnet im offiziellen Zeittakt, Feiertage nicht gesondert eingerechnet. Alle Beträge brutto.";
   }
