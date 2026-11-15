@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FaSt Verdienstrechner</title>
+<meta name="description" content="Verdienstrechner für Physio- und Ergotherapeuten bei FaSt">
+<meta name="theme-color" content="#13294B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FaSt Gehalt">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -66,6 +75,11 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
 
+.fach{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:5px;margin-bottom:16px}
+.fach button{flex:1;border:0;background:none;border-radius:10px;padding:11px 0;font-weight:700;font-size:18px;cursor:pointer;color:var(--muted)}
+.fach button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.nodblcol .trow,.nodblcol .mixhead{grid-template-columns:118px minmax(0,1fr) 58px}
+.nodblcol .mixhead span:last-child{display:none}
 .place-labels{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:2px}
 .place-labels b{color:var(--ink)}
 
@@ -73,7 +87,7 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
 .trow{display:grid;grid-template-columns:118px minmax(0,1fr) 58px 52px;align-items:center;gap:12px;padding:4px 0}
 .tname{font-weight:700;font-size:16px;line-height:1.15}
 .tname small{display:block;font-weight:500;font-size:13px;color:var(--muted)}
-.tpct{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:18px;text-align:right}
+.tpct{white-space:nowrap;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:18px;text-align:right}
 .dbl{border:2px solid var(--line);background:var(--surface);border-radius:9px;font-weight:700;font-size:14px;padding:5px 0;cursor:pointer}
 .dbl[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
 .trow.locked{opacity:.38}
@@ -94,7 +108,7 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:1px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
 .stat{background:var(--navy-2);border-radius:14px;padding:12px 14px}
-.stat .v{font-size:28px;font-weight:700;margin-top:2px}
+.stat .v{white-space:nowrap;font-size:28px;font-weight:700;margin-top:2px}
 .stat.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
 .stat.wide .v{font-size:36px;color:var(--gold)}
 .note{font-size:13px;color:var(--on-navy-muted);margin-top:14px;line-height:1.45}
@@ -109,6 +123,12 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
   .row2{grid-template-columns:1fr}
   header h1{display:none}
   .trow,.mixhead{grid-template-columns:96px minmax(0,1fr) 48px 46px;gap:8px}
+  .nodblcol .trow,.nodblcol .mixhead{grid-template-columns:96px minmax(0,1fr) 48px}
+  .place-labels{flex-direction:column;gap:2px}
+  .tpct{font-size:16px}
+  .stat.wide .v{font-size:30px}
+  .block h2{flex-wrap:wrap}
+  .place-labels span:last-child{text-align:right}
 }
 @media (prefers-reduced-motion:reduce){.split .f,.split .p{transition:none}}
 </style>
@@ -124,9 +144,13 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
     </div>
   </header>
 
+  <nav class="fach" id="fach" aria-label="Fachbereich">
+    <button data-f="physio">Physiotherapie</button><button data-f="ergo">Ergotherapie</button>
+  </nav>
+
   <div class="grid">
     <div class="panel inputs">
-      <section class="block row2">
+      <section class="block row2" id="modelWrap">
         <div class="field">
           <label>Modell</label>
           <div class="seg" id="model"><button data-m="local">Vor Ort</button><button data-m="remote">Ferntherapeut</button></div>
@@ -141,8 +165,8 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
         <div class="kminfo">Eigenes Auto: <b>Kilometergeld 0,30 € pro km</b>, zusätzlich zum Gehalt</div>
       </section>
 
-      <section class="block">
-        <h2>Deine Zertifikate <small id="fixLabel">Fixum 20 €/h</small></h2>
+      <section class="block" id="certWrap">
+        <h2>Deine Zertifikate <small id="fixLabel">Fixum 23 €/h</small></h2>
         <div class="chips" id="certs"></div>
       </section>
 
@@ -161,8 +185,8 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
         <label for="hb">Wo du behandelst <b id="hbV"></b></label>
         <input type="range" id="hb" min="0" max="100" step="5" value="30">
         <div class="place-labels">
-          <span>Hausbesuch einzeln (HB) · <b>22,78 €</b></span>
-          <span>Einrichtung (HBHP) · <b>13,09 €</b></span>
+          <span>Hausbesuch einzeln (HB) · <b id="hbP"></b></span>
+          <span>Einrichtung (HBHP) · <b id="hbhpP"></b></span>
         </div>
       </section>
 
@@ -195,56 +219,78 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
 
 <script>
 (function(){
-  const HB = 22.78, HBHP = 13.09, BASE = 20, PROV = 0.10, PROV_OWN = 0.12;
-  const CERTS = [{id:"MLD",label:"MLD"},{id:"MT",label:"MT"},{id:"ZNS",label:"KG-ZNS"}];
-  const T = [
-    {id:"KG",    label:"KG",      price:29.63, min:20, cert:null,  dbl:true},
-    {id:"ZNS",   label:"KG-ZNS",  price:47.06, min:20, cert:"ZNS", dbl:true},
-    {id:"MT",    label:"MT",      price:35.59, min:20, cert:"MT",  dbl:true},
-    {id:"MLD30", label:"MLD 30",  price:35.97, min:20, cert:"MLD", dbl:true},
-    {id:"MLD45", label:"MLD 45",  price:53.94, min:40, cert:"MLD", dbl:false},
-    {id:"MLD60", label:"MLD 60",  price:71.94, min:60, cert:"MLD", dbl:false}
-  ];
+  // Fachbereiche: Preise, Fixum, Provision
+  const FACH = {
+    physio: {
+      base:23, prov:0.10, provOwn:0.12, hb:22.78, hbhp:13.09, remote:true,
+      certs:[{id:"MT",label:"MT"},{id:"ZNS",label:"KG-ZNS"}],   // je Zertifikat +1 €/h Fixum
+      T:[
+        {id:"KG",    label:"KG",      price:29.63, min:20, cert:null,  dbl:true},
+        {id:"ZNS",   label:"KG-ZNS",  price:47.06, min:20, cert:"ZNS", dbl:true},
+        {id:"MT",    label:"MT",      price:35.59, min:20, cert:"MT",  dbl:true},
+        {id:"MLD30", label:"MLD 30",  price:35.97, min:20, cert:null,  dbl:true},
+        {id:"MLD45", label:"MLD 45",  price:53.94, min:40, cert:null,  dbl:false},
+        {id:"MLD60", label:"MLD 60",  price:71.94, min:60, cert:null,  dbl:false}
+      ]
+    },
+    ergo: {
+      base:24, prov:0.10, provOwn:0.10, hb:28.96, hbhp:18.71, remote:false,
+      certs:[],
+      T:[
+        {id:"MF", label:"MF", price:59.27, min:30, cert:null, dbl:false},
+        {id:"SP", label:"SP", price:79.03, min:45, cert:null, dbl:false},
+        {id:"PF", label:"PF", price:98.79, min:60, cert:null, dbl:false},
+        {id:"HL", label:"HL", price:59.27, min:30, cert:null, dbl:false}
+      ]
+    }
+  };
   const eur = (v,d=2)=>v.toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d});
 
-
-  let S;
-  function fresh(){
-    S = {certs:{MLD:false,MT:false,ZNS:false}, hours:30, days:5, hb:30, model:"local", car:"own",
-         share:{KG:100,ZNS:0,MT:0,MLD30:0,MLD45:0,MLD60:0}, dbl:{}};
+  let S, F;
+  function freshMix(f){
+    const share={}; FACH[f].T.forEach((t,i)=>share[t.id]=i===0?100:0);
+    return {share, dbl:{}};
+  }
+  function fresh(f){
+    S = {fach:f||"physio", certs:{MT:false,ZNS:false}, hours:30, days:5, hb:30, model:"local", car:"own",
+         mix:{physio:freshMix("physio"), ergo:freshMix("ergo")}};
+    F = FACH[S.fach];
   }
   fresh();
+  const M = ()=>S.mix[S.fach];
 
   const enabled = t => !t.cert || S.certs[t.cert];
 
   function setShare(id, v){
-    const en = T.filter(enabled).map(t=>t.id);
+    const sh=M().share;
+    const en = F.T.filter(enabled).map(t=>t.id);
     const others = en.filter(x=>x!==id);
-    if(!others.length){ S.share[id]=100; return; }
+    if(!others.length){ sh[id]=100; return; }
     v = Math.max(0,Math.min(100,v));
-    S.share[id]=v;
+    sh[id]=v;
     const rest = 100 - v;
-    const sum = others.reduce((a,x)=>a+S.share[x],0);
-    others.forEach(x=>{ S.share[x] = sum>0 ? S.share[x]*rest/sum : rest/others.length; });
+    const sum = others.reduce((a,x)=>a+sh[x],0);
+    others.forEach(x=>{ sh[x] = sum>0 ? sh[x]*rest/sum : rest/others.length; });
   }
   function normalize(){
-    T.forEach(t=>{ if(!enabled(t)){ S.share[t.id]=0; S.dbl[t.id]=false; } });
-    const en = T.filter(enabled).map(t=>t.id);
-    const sum = en.reduce((a,x)=>a+S.share[x],0);
-    if(sum<=0){ en.forEach(x=>S.share[x]=0); S.share.KG=100; }
-    else en.forEach(x=>S.share[x]=S.share[x]*100/sum);
+    const sh=M().share, dbl=M().dbl;
+    F.T.forEach(t=>{ if(!enabled(t)){ sh[t.id]=0; dbl[t.id]=false; } });
+    const en = F.T.filter(enabled).map(t=>t.id);
+    const sum = en.reduce((a,x)=>a+sh[x],0);
+    if(sum<=0){ en.forEach(x=>sh[x]=0); sh[F.T[0].id]=100; }
+    else en.forEach(x=>sh[x]=sh[x]*100/sum);
   }
 
-  // build certificate chips
+  // Zertifikate (nur Physio)
   const certsEl = document.getElementById("certs");
-  CERTS.forEach(c=>{
+  FACH.physio.certs.forEach(c=>{
     const b=document.createElement("button"); b.className="chip"; b.dataset.id=c.id;
     b.innerHTML='<span class="box"></span>'+c.label;
     b.onclick=()=>{ S.certs[c.id]=!S.certs[c.id]; normalize(); render(); };
     certsEl.appendChild(b);
   });
 
-  // days segmented
+  // Arbeitstage
   const daysEl=document.getElementById("days");
   [1,2,3,4,5].forEach(d=>{
     const b=document.createElement("button"); b.textContent=d; b.dataset.d=d;
@@ -252,28 +298,42 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
     daysEl.appendChild(b);
   });
 
-  // treatment rows
+  // Behandlungszeilen je Fachbereich
   const mixEl=document.getElementById("mix");
-  T.forEach(t=>{
-    const r=document.createElement("div"); r.className="trow"; r.dataset.id=t.id;
-    r.innerHTML =
-      '<div class="tname">'+t.label+'<small class="meta"></small></div>'+
-      '<input type="range" min="0" max="100" step="1" aria-label="Anteil '+t.label+'">'+
-      '<div class="tpct"></div>'+
-      (t.dbl ? '<button class="dbl" aria-label="Doppeltermin '+t.label+'">2×</button>' : '<div class="nodbl">–</div>');
-    r.querySelector("input").addEventListener("input",e=>{ setShare(t.id, +e.target.value); render(); });
-    const db=r.querySelector(".dbl");
-    if(db) db.onclick=()=>{ S.dbl[t.id]=!S.dbl[t.id]; render(); };
-    mixEl.appendChild(r);
-  });
+  let builtFor=null;
+  function buildMix(){
+    if(builtFor===S.fach) return;
+    builtFor=S.fach;
+    mixEl.innerHTML="";
+    const anyDbl=F.T.some(t=>t.dbl);
+    mixEl.parentElement.classList.toggle("nodblcol",!anyDbl);
+    F.T.forEach(t=>{
+      const r=document.createElement("div"); r.className="trow"; r.dataset.id=t.id;
+      r.innerHTML =
+        '<div class="tname">'+t.label+'<small class="meta"></small></div>'+
+        '<input type="range" min="0" max="100" step="1" aria-label="Anteil '+t.label+'">'+
+        '<div class="tpct"></div>'+
+        (!anyDbl ? '' : t.dbl ? '<button class="dbl" aria-label="Doppeltermin '+t.label+'">2×</button>' : '<div class="nodbl">–</div>');
+      r.querySelector("input").addEventListener("input",e=>{ setShare(t.id, +e.target.value); render(); });
+      const db=r.querySelector(".dbl");
+      if(db) db.onclick=()=>{ M().dbl[t.id]=!M().dbl[t.id]; render(); };
+      mixEl.appendChild(r);
+    });
+  }
 
+  const fachEl=document.getElementById("fach");
+  fachEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{ S.fach=b.dataset.f; F=FACH[S.fach]; render(); });
   document.getElementById("hours").addEventListener("input",e=>{S.hours=+e.target.value; render();});
   document.getElementById("hb").addEventListener("input",e=>{S.hb=+e.target.value; render();});
   const modelEl=document.getElementById("model"), carEl=document.getElementById("car");
   modelEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.model=b.dataset.m; render();});
   carEl.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.car=b.dataset.c; render();});
-  document.getElementById("reset").onclick=()=>{ fresh(); render(); };
-  document.getElementById("fs").onclick=()=>{
+  document.getElementById("reset").onclick=()=>{ fresh(S.fach); render(); };
+
+  const fsBtn=document.getElementById("fs");
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if(standalone || !document.documentElement.requestFullscreen) fsBtn.hidden=true;
+  fsBtn.onclick=()=>{
     try{
       if(!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
@@ -281,48 +341,54 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
   };
 
   function calc(){
-    const fix = BASE + Object.values(S.certs).filter(Boolean).length;
+    const certCount = F.certs.filter(c=>S.certs[c.id]).length;
+    const fix = F.base + certCount;
     const h = S.hb/100;
-    const pausch = h*HB + (1-h)*HBHP;
+    const pausch = h*F.hb + (1-h)*F.hbhp;
+    const mix=M();
     let revH=0, visitsH=0;
-    T.forEach(t=>{
-      const sh=S.share[t.id]/100; if(!sh) return;
-      const f = (t.dbl && S.dbl[t.id]) ? 2 : 1;
+    F.T.forEach(t=>{
+      const sh=mix.share[t.id]/100; if(!sh) return;
+      const f = (t.dbl && mix.dbl[t.id]) ? 2 : 1;
       const perHour = 60/(t.min*f);
       revH += sh*perHour*(t.price*f + pausch);
       visitsH += sh*perHour;
     });
-    const own = S.model==="remote" && S.car==="own";
-    const prov = own ? PROV_OWN : PROV;
+    const remote = F.remote && S.model==="remote";
+    const own = remote && S.car==="own";
+    const prov = own ? F.provOwn : F.prov;
     const provH = revH*prov;
     const vacDays = Math.round(30*S.days/5);
-    const vacWeeks = vacDays/S.days;
-    const workWeeks = 52 - vacWeeks;
-    const yFix = fix*S.hours*52;
-    const yProv = provH*S.hours*52;
-    const year = yFix+yProv;
-    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,yFix,yProv,prov,own};
+    const year = (fix+provH)*S.hours*52;
+    return {fix,provH,rate:fix+provH,revW:revH*S.hours,visitsW:visitsH*S.hours,vacDays,year,month:year/12,prov,own};
   }
 
   function render(){
+    buildMix();
     const R=calc();
+    fachEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===S.fach));
+    document.getElementById("certWrap").hidden = !F.certs.length;
+    document.getElementById("modelWrap").hidden = !F.remote;
     document.getElementById("fixLabel").textContent="Fixum "+R.fix+" €/h";
-    certsEl.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",S.certs[b.dataset.id]));
+    certsEl.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",!!S.certs[b.dataset.id]));
     document.getElementById("hours").value=S.hours;
     document.getElementById("hoursV").textContent=S.hours+" h";
     document.getElementById("daysV").textContent=S.days;
     daysEl.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.d===S.days));
     document.getElementById("hb").value=S.hb;
     document.getElementById("hbV").textContent=S.hb+" % HB · "+(100-S.hb)+" % HBHP";
+    document.getElementById("hbP").textContent=eur(F.hb)+" €";
+    document.getElementById("hbhpP").textContent=eur(F.hbhp)+" €";
 
+    const mix=M();
     mixEl.querySelectorAll(".trow").forEach(r=>{
-      const t=T.find(x=>x.id===r.dataset.id), en=enabled(t), d=t.dbl&&S.dbl[t.id];
+      const t=F.T.find(x=>x.id===r.dataset.id), en=enabled(t), d=t.dbl&&mix.dbl[t.id];
       r.classList.toggle("locked",!en);
       r.querySelector(".meta").textContent = en
         ? eur(t.price*(d?2:1))+" € · "+(t.min*(d?2:1))+" Min"
         : "Zertifikat nötig";
-      const inp=r.querySelector("input"); inp.value=Math.round(S.share[t.id]); inp.disabled=!en;
-      r.querySelector(".tpct").textContent=Math.round(S.share[t.id])+" %";
+      const inp=r.querySelector("input"); inp.value=Math.round(mix.share[t.id]); inp.disabled=!en;
+      r.querySelector(".tpct").textContent=Math.round(mix.share[t.id])+" %";
       const db=r.querySelector(".dbl"); if(db){ db.setAttribute("aria-pressed",!!d); db.disabled=!en; }
     });
 
@@ -349,6 +415,10 @@ input[type=range]{width:100%;accent-color:var(--gold);height:28px;margin:0;curso
       "Berechnet im offiziellen Zeittakt, Feiertage nicht gesondert eingerechnet. Alle Beträge brutto.";
   }
   render();
+
+  if("serviceWorker" in navigator && location.protocol==="https:"){
+    addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+  }
 })();
 </script>
 </body>
